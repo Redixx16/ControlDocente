@@ -1,0 +1,20 @@
+@font-face {
+    font-family: 'Poppins';
+    src: url('../fonts/poppins-v23-latin-300.woff2') format('woff2');
+    font-weight: 300;
+  }
+  @font-face {
+    font-family: 'Poppins';
+    src: url('../fonts/poppins-v23-latin-500.woff2') format('woff2');
+    font-weight: 500;
+  }
+  @font-face {
+    font-family: 'Poppins';
+    src: url('../fonts/poppins-v23-latin-600.woff2') format('woff2');
+    font-weight: 600;
+  }
+  
+  body {
+    font-family: 'Poppins', sans-serif;
+  }
+  

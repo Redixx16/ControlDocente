@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard | I.E. Santa Beatriz de Silva{% endblock %}
+
+{% block head %}
+<style>
+
+  .dashboard-wrapper{
+    max-width:1400px;margin:auto;padding:2rem 1rem;
+  }
+  .kpi-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:1.5rem;margin-bottom:2rem;
+  }
+  .kpi-card{
+    position:relative;border:none;border-radius:.75rem;
+    color:#fff;padding:1.5rem 1rem 1rem;overflow:hidden;
+  }
+  .kpi-card i{
+    position:absolute;top:-10px;right:-10px;font-size:3.5rem;opacity:.15;
+  }
+  .kpi-label{font-size:.85rem;text-transform:uppercase;opacity:.8;margin-top:.5rem;}
+  .kpi-value{font-size:2.25rem;font-weight:700;}
+
+  .kpi-docentes        {background:#4e73df;}
+  .kpi-asistencias-mes {background:#1cc88a;}
+  .kpi-tardanzas-mes   {background:#f6c23e;color:#212529;}
+  .kpi-inasistencias-mes{background:#858796;}
+  .kpi-justif-aprob    {background:#20c997;}
+  .kpi-justif-pend     {background:#ffc107;color:#212529;}
+  .kpi-permisos        {background:#36b9cc;}
+  .kpi-advertencias    {background:#e74a3b;} 
+
+  .chart-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:1.5rem;margin-bottom:2rem;
+  }
+  .list-group-item{border:none;border-bottom:1px solid #e3e6f0;}
+  .list-group-item:last-child{border-bottom:none;}
+  .card {
+    border: none;
+    border-radius: .75rem;
+    height: 100%; 
+  }
+  .no-data-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 2rem;
+    background-color: #f8f9fa;
+    border-radius: .75rem;
+    text-align: center;
+    border: 1px dashed #d1d3e2;
+  }
+  .no-data-container i {
+    font-size: 3.5rem;
+    color: #858796;
+    margin-bottom: 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+
+  <div class="text-center mb-5">
+    <h1 class="h3 fw-bold text-primary">
+      <i class="bi bi-bar-chart-fill me-2"></i>Dashboard de Asistencias
+    </h1>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-docentes shadow">
+      <i class="bi bi-people-fill"></i>
+      <div class="kpi-label">Docentes Totales</div>
+      <div class="kpi-value">{{ total_docentes }}</div>
+    </div>
+    <div class="kpi-card kpi-permisos shadow">
+        <i class="bi bi-calendar-check-fill"></i>
+        <div class="kpi-label">Con Permiso Hoy</div>
+        <div class="kpi-value">{{ permisos_activos_hoy }}</div>
+    </div>
+    <div class="kpi-card kpi-asistencias-mes shadow">
+      <i class="bi bi-check2-all"></i>
+      <div class="kpi-label">A Tiempo (Mes)</div>
+      <div class="kpi-value">{{ asistencias_mes }}</div>
+    </div>
+    <div class="kpi-card kpi-tardanzas-mes shadow">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <div class="kpi-label">Tardanzas (Mes)</div>
+      <div class="kpi-value">{{ tardanzas_mes }}</div>
+    </div>
+    <div class="kpi-card kpi-inasistencias-mes shadow">
+      <i class="bi bi-person-x-fill"></i>
+      <div class="kpi-label">Inasistencias (Mes)</div>
+      <div class="kpi-value">{{ inasistencias_mes }}</div>
+    </div>
+    <div class="kpi-card kpi-justif-aprob shadow">
+      <i class="bi bi-file-earmark-check-fill"></i>
+      <div class="kpi-label">Justif. Aprobadas</div>
+      <div class="kpi-value">{{ total_justif_aprob }}</div>
+    </div>
+    <div class="kpi-card kpi-justif-pend shadow">
+      <i class="bi bi-hourglass-split"></i>
+      <div class="kpi-label">Justif. Pendientes</div>
+      <div class="kpi-value">{{ total_justif_pend }}</div>
+    </div>
+    <div class="kpi-card kpi-advertencias shadow">
+        <i class="bi bi-exclamation-octagon-fill"></i>
+        <div class="kpi-label">Advertencias (Mes)</div>
+        <div class="kpi-value">{{ total_advertencias_mes }}</div>
+    </div>
+  </div>
+
+  {% if asistencias_mes > 0 or tardanzas_mes > 0 or inasistencias_mes > 0 or estado_docentes_hoy %}
+
+    <div class="chart-grid">
+      <div class="card shadow-sm">
+        <div class="card-body text-center">
+          <h5 class="fw-semibold mb-3">Resumen General del Mes</h5>
+          <canvas id="puntualidadGeneralChart" height="120"></canvas>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body text-center">
+          <h5 class="fw-semibold mb-3">Asistencia de Hoy</h5>
+          <canvas id="asistenciaHoyChart" width="100" height="100"></canvas>
+          <div class="mt-2 text-muted">
+            <b>{{ porcentaje_asistieron_hoy }}%</b> de {{ docentes_programados_hoy }} programados
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body text-center d-flex flex-column justify-content-center">
+          <h5 class="fw-semibold mb-3">Docente Destacado (Mes)</h5>
+          <i class="bi bi-award-fill fs-2 text-success mb-2"></i>
+          <span class="fw-bold d-block">{{ docente_destacado.nombre if docente_destacado else '—' }}</span>
+          {% if docente_destacado %}
+          <small class="text-muted">{{ docente_destacado.cantidad }} asistencias puntuales</small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mt-4">
+      <div class="card-body">
+        <h5 class="fw-semibold text-center mb-3">
+          <i class="bi bi-calendar2-week-fill me-1"></i>Resumen de los Últimos Días Hábiles
+        </h5>
+        <canvas id="graficoAsistencias7dias" height="100"></canvas>
+      </div>
+    </div>
+
+    <div class="row g-4 mt-3">
+        <div class="col-lg-4 col-md-12">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="fw-semibold mb-3"><i class="bi bi-person-check-fill text-info me-1"></i>Estado del Personal Hoy</h5>
+                <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                  <table class="table table-sm table-borderless mb-0 align-middle">
+                    <tbody>
+                    {% for d in estado_docentes_hoy %}
+                      <tr>
+                        <td>{{ d.nombre }}</td>
+                        <td class="text-end" style="min-width: 140px;">
+                          {% if d.estado == 'Permiso' %}
+                            <span class="badge" style="background-color: #36b9cc; color: white;">
+                              <i class="bi bi-calendar-check-fill me-1"></i>Permiso
+                            </span>
+                          
+                          {% elif d.estado == 'Pendiente' %}
+                            <span class="badge bg-secondary bg-opacity-75">
+                                <i class="bi bi-question-circle me-1"></i>Sin registro
+                            </span>
+
+                          {% elif d.estado_justificacion == 'Aprobada' %}
+                            <span class="badge bg-success bg-opacity-75">
+                              <i class="bi bi-check-circle-fill me-1"></i>Justificada
+                            </span>
+                          {% elif d.estado_justificacion == 'Pendiente' %}
+                            <span class="badge bg-warning text-dark bg-opacity-75">
+                              <i class="bi bi-hourglass-split me-1"></i>Pendiente
+                            </span>
+                          {% elif d.estado == 'Tarde' %}
+                            <span class="badge bg-warning text-dark bg-opacity-75">
+                              <i class="bi bi-clock-history me-1"></i>Tarde ({{ d.hora_registro }})
+                            </span>
+                          {% elif d.estado == 'Inasistencia' %}
+                            <span class="badge bg-danger bg-opacity-75">
+                              <i class="bi bi-x-circle me-1"></i>Inasistencia
+                            </span>
+                          {% elif d.estado == 'A tiempo' %}
+                            <span class="badge bg-success bg-opacity-75">
+                              <i class="bi bi-check2-circle me-1"></i>A tiempo ({{ d.hora_registro }})
+                            </span>
+                          {% else %}
+                            <span class="badge bg-secondary">{{ d.estado }}</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% else %}
+                      <tr><td colspan="2" class="text-center text-muted p-3">No hay personal programado para hoy.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8 col-md-12">
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                          <h5 class="fw-semibold mb-3"><i class="bi bi-star-fill text-warning me-1"></i>Top 5 Más Puntuales (Mes)</h5>
+                          <ul class="list-group list-group-flush">
+                            {% for d in top_puntuales %}
+                              <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ loop.index }}. {{ d.nombre }}</span>
+                                <span class="badge bg-success rounded-pill">{{ d.porcentaje }}%</span>
+                              </li>
+                            {% else %}
+                              <li class="list-group-item text-center text-muted">No hay datos suficientes.</li>
+                            {% endfor %}
+                          </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                          <h5 class="fw-semibold mb-3"><i class="bi bi-alarm-fill text-danger me-1"></i>Top 5 Tardanzas (Mes)</h5>
+                          <ul class="list-group list-group-flush">
+                            {% for d in tardanzas_docentes %}
+                              <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ loop.index }}. {{ d.nombre }}</span>
+                                <span class="badge bg-danger rounded-pill">{{ d.cantidad }}</span>
+                              </li>
+                            {% else %}
+                              <li class="list-group-item text-center text-muted">Sin tardanzas este mes.</li>
+                            {% endfor %}
+                          </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                      <div class="card-body">
+                        <h5 class="fw-semibold mb-3"><i class="bi bi-person-x-fill text-secondary me-1"></i>Top 5 Inasistencias (Mes)</h5>
+                        <ul class="list-group list-group-flush">
+                          {% for d in top_inasistencias %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                              <span>{{ loop.index }}. {{ d.nombre }}</span>
+                              <span class="badge bg-secondary rounded-pill">{{ d.cantidad }}</span>
+                            </li>
+                          {% else %}
+                            <li class="list-group-item text-center text-muted">Sin inasistencias este mes.</li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                      <div class="card-body">
+                        <h5 class="fw-semibold mb-3"><i class="bi bi-exclamation-octagon-fill text-danger me-1"></i>Top 5 Advertencias (Mes)</h5>
+                        <ul class="list-group list-group-flush">
+                          {% for d in top_advertencias %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                              <span>{{ loop.index }}. {{ d.nombre }}</span>
+                              <span class="badge bg-danger rounded-pill">{{ d.cantidad }}</span>
+                            </li>
+                          {% else %}
+                            <li class="list-group-item text-center text-muted">Sin advertencias este mes.</li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  {% else %}
+    <div class="no-data-container mt-4">
+        <i class="bi bi-info-circle"></i>
+        <h4 class="fw-bold">No hay datos para mostrar</h4>
+        <p class="text-muted mb-0">
+            No se encontró actividad de asistencia para el mes actual.<br>
+            Por favor, asegúrate de que existan horarios configurados y registros de asistencia.
+        </p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  {% if asistencias_mes > 0 or tardanzas_mes > 0 or inasistencias_mes > 0 %}
+    const chartColors = {
+      a_tiempo: '#1cc88a',
+      tardanzas: '#f6c23e',
+      inasistencias: '#e74a3b',
+      justificadas_permisos: '#20c997',
+      permisos: '#36b9cc',
+      fondo: '#e9ecef'
+    };
+
+    /* Gráfico Puntualidad General */
+    const puntualidadData = {{ puntualidad_general_data | tojson }};
+    const ctxPuntualidad = document.getElementById('puntualidadGeneralChart');
+    if (ctxPuntualidad) {
+      new Chart(ctxPuntualidad, {
+        type: 'doughnut',
+        data: {
+          labels: ['A Tiempo', 'Tardanzas', 'Inasistencias', 'Justific./Permisos'],
+          datasets: [{
+            data: [
+              puntualidadData.a_tiempo,
+              puntualidadData.tardanzas,
+              puntualidadData.inasistencias,
+              puntualidadData.justificadas_permisos
+            ],
+            backgroundColor: [
+              chartColors.a_tiempo,
+              chartColors.tardanzas,
+              chartColors.inasistencias,
+              chartColors.permisos
+            ],
+            borderColor: '#fff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          cutout: '70%',
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } }
+          }
+        }
+      });
+    }
+
+    /* Gráfico Asistencia Hoy */
+    const asistieronHoy = {{ porcentaje_asistieron_hoy }};
+    const ctxAsistenciaHoy = document.getElementById('asistenciaHoyChart');
+    if (ctxAsistenciaHoy) {
+        new Chart(ctxAsistenciaHoy, {
+        type: 'doughnut',
+        data: {
+          labels: ['Asistieron', 'No Asistieron'],
+          datasets: [{
+            data: [asistieronHoy, 100 - asistieronHoy],
+            backgroundColor: [chartColors.a_tiempo, chartColors.fondo],
+            borderWidth: 1
+          }]
+        },
+        options: { cutout: '70%', plugins: { legend: { display: false } } }
+      });
+    }
+
+    /* Gráfico Asistencias Últimos Días */
+    const asistencias7dias = {{ asistencias_7dias_data | tojson }};
+    const ctxAsistencias7Dias = document.getElementById('graficoAsistencias7dias');
+    if (ctxAsistencias7Dias && asistencias7dias.length > 0) {
+      new Chart(ctxAsistencias7Dias, {
+        type: 'bar',
+        data: {
+          labels: asistencias7dias.map(d => d.fecha),
+          datasets: [
+            { label: 'A Tiempo', data: asistencias7dias.map(d => d.a_tiempo), backgroundColor: chartColors.a_tiempo },
+            { label: 'Tardanzas', data: asistencias7dias.map(d => d.tardanzas), backgroundColor: chartColors.tardanzas },
+            { label: 'Inasistencias', data: asistencias7dias.map(d => d.inasistencias), backgroundColor: chartColors.inasistencias },
+            { label: 'Permisos', data: asistencias7dias.map(d => d.permisos), backgroundColor: chartColors.permisos }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true }
+          }
+        }
+      });
+    }
+  {% endif %}
+});
+</script>
+{% endblock %}

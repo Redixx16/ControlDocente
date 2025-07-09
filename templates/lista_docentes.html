@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% block title %}Lista de Docentes{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-1" style="letter-spacing: -1px;">
+        <i class="bi bi-people-fill me-2 text-primary"></i> Docentes Registrados
+      </h2>
+      <div class="text-secondary small" style="letter-spacing: 0.5px;">
+        Total: <span class="fw-bold text-primary">{{ docentes|length }}</span>
+      </div>
+    </div>
+    <a href="{{ url_for('teachers.registrar_docente') }}"
+       class="btn btn-primary px-4 py-2 rounded-pill fw-semibold d-flex align-items-center gap-2 shadow-sm">
+      <i class="bi bi-person-plus-fill fs-5"></i> Registrar nuevo docente
+    </a>
+  </div>
+  
+  <div class="search-wrapper mb-4 d-flex justify-content-center">
+    <div class="input-group custom-search shadow-lg" style="max-width: 420px;">
+      <span class="input-group-text icon-container bg-white border-0">
+        <i class="bi bi-search text-primary fs-4"></i>
+      </span>
+      <input type="text" class="form-control search-input"
+             id="buscarDocente"
+             placeholder="Buscar por nombre, apellido, DNI o cargo…" {# Actualizado placeholder #}
+             aria-label="Buscar docente"
+             style="font-size:1.1rem;">
+    </div>
+  </div>
+
+  <div class="row gy-4" id="docenteContainer">
+    {% for d in docentes %}
+    <div class="col-sm-6 col-md-4 col-lg-3 docente-card"
+         data-nombre="{{ d.nombres }} {{ d.apellido_paterno }} {{ d.apellido_materno }}"
+         data-dni="{{ d.dni }}"
+         data-cargo="{{ d.nombre_cargo | lower }}" {# Añadido para el buscador #}>
+      <div class="card docente-card-item border-0 shadow-sm rounded-4 h-100 position-relative">
+        <div class="position-absolute" style="top:-34px;left:50%;transform:translateX(-50%);z-index:2;">
+          <div class="docente-avatar">
+            <span>
+              {{ d.nombres[0] | upper if d.nombres else 'X' }}{{ d.apellido_paterno[0] | upper if d.apellido_paterno else 'X' }}
+            </span>
+          </div>
+        </div>
+        <div class="card-body d-flex flex-column align-items-center text-center pt-5">
+          <h5 class="card-title fw-bold mb-1 text-dark" style="letter-spacing:0.5px;">{{ d.nombres }}</h5>
+          <p class="text-muted mb-1" style="font-size:1.04em;">
+            {{ d.apellido_paterno }} {{ d.apellido_materno }}
+          </p>
+          <span class="badge bg-light text-secondary mb-1 px-3 py-2" style="font-size:.90em;">
+            <i class="bi bi-card-text me-1"></i> {{ d.dni }}
+          </span>
+          
+          <div class="mb-2 w-100">
+            <span class="badge bg-primary-subtle text-primary-emphasis fw-medium d-block mx-auto mb-1" style="font-size:.85em; max-width: 90%;">{{ d.nombre_cargo }}</span>
+            {% if d.nombre_grado and d.nombre_grado != 'N/A' %} 
+              <span class="badge bg-info-subtle text-info-emphasis fw-medium" style="font-size:.80em;">Gr: {{ d.nombre_grado }}</span>
+            {% endif %}
+            {% if d.nombre_seccion and d.nombre_seccion != 'N/A' %}
+              <span class="badge bg-secondary-subtle text-secondary-emphasis fw-medium {% if d.nombre_grado and d.nombre_grado != 'N/A' %}ms-1{% endif %}" style="font-size:.80em;">Sec: {{ d.nombre_seccion }}</span>
+            {% endif %}
+          </div>
+          <div class="mt-auto d-flex gap-2 justify-content-center w-100">
+            <button class="btn btn-outline-info btn-sm rounded-pill px-2 py-1"
+                    data-bs-toggle="modal"
+                    data-bs-target="#asistenciasModal"
+                    data-dni="{{ d.dni }}"
+                    title="Ver asistencias recientes">
+              <i class="bi bi-calendar-check-fill"></i> <span class="d-none d-md-inline">Asist.</span>
+            </button>
+            <a href="{{ url_for('teachers.editar_docente', dni_docente=d.dni) }}" 
+               class="btn btn-outline-primary btn-sm rounded-pill px-2 py-1"
+               title="Editar docente">
+              <i class="bi bi-pencil-fill"></i> <span class="d-none d-md-inline">Editar</span>
+            </a>
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-2 py-1 eliminar-btn"
+                    data-dni="{{ d.dni }}"
+                    data-nombre="{{ d.nombres }} {{ d.apellido_paterno }}"
+                    title="Eliminar docente">
+              <i class="bi bi-trash-fill"></i> <span class="d-none d-md-inline">Elim.</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+      <div class="col-12">
+        <p class="text-center text-muted mt-5">No hay docentes registrados.</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="modal fade" id="asistenciasModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Asistencias Recientes</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="infoDocenteAsistencia" class="mb-3 border-bottom pb-2"></div> {# Para mostrar nombre y cargo del docente #}
+        <div id="asistenciasContent" style="max-height: 400px; overflow-y: auto;">
+             <p class="text-muted text-center">Cargando asistencias...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Inicializa tooltips de Bootstrap
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"],[title]'))
+  tooltipTriggerList.forEach(function (el) {
+    if (el.getAttribute('title')) { // Solo inicializar si tiene title para evitar errores
+        new bootstrap.Tooltip(el);
+    }
+  });
+
+  // Buscador
+  const buscarDocenteInput = document.getElementById("buscarDocente");
+  if (buscarDocenteInput) {
+    buscarDocenteInput.addEventListener("keyup", function() {
+      const query = this.value.toLowerCase().trim();
+      document.querySelectorAll(".docente-card").forEach(card => {
+        const nombre = card.dataset.nombre.toLowerCase();
+        const dni = card.dataset.dni;
+        const cargo = card.dataset.cargo.toLowerCase(); // Usar el data-cargo
+        card.style.display = (nombre.includes(query) || dni.includes(query) || cargo.includes(query)) ? "" : "none";
+      });
+    });
+  }
+
+  // Eliminar
+  document.querySelectorAll(".eliminar-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const dni = btn.dataset.dni;
+      const docenteNombre = btn.dataset.nombre; // Obtener nombre del data attribute
+
+      Swal.fire({
+        title: `¿Eliminar a ${docenteNombre}?`,
+        text: "DNI: " + dni + ". Esta acción no se puede deshacer.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
+      }).then(result => {
+        if (result.isConfirmed) {
+          window.location.href = `/docentes/eliminar/${dni}`;
+        }
+      });
+    });
+  });
+
+  // Asistencias (Modal)
+  const asistenciasModalEl = document.getElementById('asistenciasModal');
+  if (asistenciasModalEl) {
+      const infoDocenteAsistenciaEl = document.getElementById("infoDocenteAsistencia");
+      const asistenciasContentEl = document.getElementById("asistenciasContent");
+
+      asistenciasModalEl.addEventListener('show.bs.modal', function (event) {
+          const button = event.relatedTarget; // Botón que activó el modal
+          const dni = button.dataset.dni;
+          
+          // Limpiar contenido anterior y mostrar "cargando"
+          if(infoDocenteAsistenciaEl) infoDocenteAsistenciaEl.innerHTML = "";
+          if(asistenciasContentEl) asistenciasContentEl.innerHTML = '<p class="text-muted text-center">Cargando asistencias...</p>';
+          
+          // Obtener info del docente para el título del modal
+          const card = button.closest('.docente-card');
+          const nombreCompleto = card.dataset.nombre;
+          const cargoDocente = card.dataset.cargo; // Usar data-cargo
+          const tipoDocente = card.querySelector('.badge.bg-light.text-secondary') ? card.querySelector('.badge.bg-light.text-secondary').textContent.replace(/.*:\s*/, '') : ''; // Extraer tipo si es necesario
+
+          if(asistenciasModalEl.querySelector('.modal-title')) {
+              asistenciasModalEl.querySelector('.modal-title').textContent = `Asistencias Recientes: ${nombreCompleto}`;
+          }
+          if(infoDocenteAsistenciaEl) {
+            infoDocenteAsistenciaEl.innerHTML = `
+              <p class="mb-1"><small class="text-muted">DNI:</small> <strong>${dni}</strong></p>
+              <p class="mb-0"><small class="text-muted">Cargo:</small> <strong>${cargoDocente}</strong></p>
+            `;
+          }
+
+          fetch(`/docentes/asistencias/${dni}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Error al cargar asistencias.');
+                return res.text();
+            })
+            .then(html => {
+                if(asistenciasContentEl) asistenciasContentEl.innerHTML = html;
+            })
+            .catch(err => {
+                if(asistenciasContentEl) asistenciasContentEl.innerHTML = '<p class="text-danger text-center">Error al cargar asistencias.</p>';
+                console.error("Error fetching asistencias:", err);
+            });
+      });
+  }
+});
+</script>
+{% endblock %}

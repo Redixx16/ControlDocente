@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block title %}Permisos Docentes{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    
+    <div class="mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-calendar-x-fill me-2 text-danger"></i> Gestión de Permisos y Licencias
+        </h2>
+        <p class="text-muted mb-0">Registra y administra los permisos del personal docente.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-5">
+        <div class="card-header bg-light border-bottom-0 rounded-top-4">
+            <h5 class="mb-0 fw-semibold text-dark">Registrar Nuevo Permiso</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('permisos.agregar_permiso') }}" class="row g-3">
+                <div class="col-md-4 col-lg-3">
+                    <label for="docenteSelect" class="form-label">Docente Titular</label>
+                    <select id="docenteSelect" name="dni" class="form-select" required>
+                        <option value="" disabled selected>Seleccionar...</option>
+                        {% for d in docentes_para_permiso %}
+                            <option value="{{ d.dni }}">{{ d.apellido_paterno }} {{ d.apellido_materno }}, {{ d.nombres }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="fechaInicio" class="form-label">Desde *</label>
+                    <input id="fechaInicio" type="date" name="fecha_inicio" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <label for="fechaFin" class="form-label">Hasta *</label>
+                    <input id="fechaFin" type="date" name="fecha_fin" class="form-control" required>
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <label for="motivo" class="form-label">Motivo *</label>
+                    <input id="motivo" type="text" name="motivo" class="form-control" placeholder="Ej: Salud, Personal" required>
+                </div>
+                <div class="col-12 col-lg"> 
+                     <label class="form-label d-block d-lg-none">&nbsp;</label> 
+                     <label class="form-label d-none d-lg-block invisible">Acción</label>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 w-100">
+                        <i class="bi bi-plus-circle me-1"></i> Registrar
+                    </button>
+                </div>
+                <div class="col-12">
+                    <label for="observaciones" class="form-label">Observaciones (opcional)</label>
+                    <input id="observaciones" type="text" name="observaciones" class="form-control" placeholder="Detalles adicionales...">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-semibold text-dark">Historial de Permisos</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="tabla-permisos" class="table table-hover align-middle datatable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Docente</th>
+                            <th>Desde</th>
+                            <th>Hasta</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                            <th>Observaciones</th>
+                            <th>Sustitutos Asignados</th>
+                            <th class="pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for p in permisos %}
+                    <tr>
+                        <td class="text-start ps-4 fw-medium">{{ p.docente }}</td>
+                        <td>{{ p.fecha_inicio | formatear_fecha }}</td>
+                        <td>{{ p.fecha_fin | formatear_fecha if p.fecha_fin else "Indefinido" }}</td>
+                        <td>{{ p.motivo }}</td>
+                        <td>
+                            {% if p.estado_calculado == "Activo" %}
+                                <span class="badge rounded-pill bg-warning text-dark">Activo</span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-secondary">Finalizado</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">{{ p.observaciones or "—" }}</td>
+                        <td class="text-start">
+                            {% if p.sustitutos %}
+                                <ul class="list-unstyled mb-0 small">
+                                {% for s in p.sustitutos %}
+                                    <li class="mb-1">
+                                        <i class="bi bi-person-check-fill text-success me-1"></i>
+                                        <strong class="text-dark">{{ s.nombre }}</strong>
+                                        <span class="text-muted d-block ps-3">({{ s.fecha_inicio | formatear_fecha }} - {{ s.fecha_fin | formatear_fecha }})</span>
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="text-muted fst-italic">Sin sustituto</span>
+                            {% endif %}
+                        </td>
+                        <td class="pe-4">
+                            <div class="d-flex justify-content-start gap-2">
+                                {% if p.estado_calculado == "Activo" and not p.sustitutos %}
+                                <button class="btn btn-sm btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#modalSust{{ p.id }}" title="Asignar un docente sustituto">
+                                    <i class="bi bi-person-plus"></i> Sustituir
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+    {% for p in permisos %}
+    <div class="modal fade" id="modalSust{{ p.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="{{ url_for('permisos.asignar_sustituto', permiso_id=p.id) }}" method="POST" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Asignar Sustituto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Asignando un docente sustituto para <strong>{{ p.docente }}</strong> del {{ p.fecha_inicio | formatear_fecha }} al {{ p.fecha_fin | formatear_fecha }}.</p>
+                    <div class="mb-3">
+                        <label for="sustitutoDni{{ p.id }}" class="form-label">Docente Sustituto *</label>
+                        <select id="sustitutoDni{{ p.id }}" name="sustituto_dni" class="form-select" required>
+                            <option value="" disabled selected>Seleccione un sustituto...</option>
+                            {% for d_sust in docentes_sustitutos %}
+                                <option value="{{ d_sust.dni }}">{{ d_sust.apellido_paterno }} {{ d_sust.apellido_materno }}, {{ d_sust.nombres }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sustInicio{{ p.id }}" class="form-label">Desde *</label>
+                        <input type="date" name="fecha_inicio" class="form-control" required value="{{ p.fecha_inicio }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="sustFin{{ p.id }}" class="form-label">Hasta *</label>
+                        <input type="date" name="fecha_fin" class="form-control" required value="{{ p.fecha_fin }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary rounded-pill">
+                        <i class="bi bi-check-circle me-1"></i> Asignar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        $('.datatable').DataTable({
+            language: {
+                url: "{{ url_for('static', filename='js/lang/es-ES.json') }}",
+                "sEmptyTable": "No hay permisos registrados."
+            },
+            pageLength: 10,
+            lengthMenu: [5, 10, 25, 50],
+            order: [[1, 'desc']]
+        });
+    });
+</script>
+{% endblock %}

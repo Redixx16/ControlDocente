@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}Reporte Mensual{% endblock %}
+
+{% block content %}
+<div class="reporte-bg py-5 px-1 px-md-4">
+  <div class="container-xl">
+    <div class="card border-0 shadow-lg rounded-4 p-4 mb-4 bg-white" style="max-width:1140px; margin:auto;">
+      <div class="d-flex align-items-center gap-3 mb-2">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height:45px;" class="rounded-3 shadow-sm">
+        <div>
+          <h2 class="fw-bold mb-1 text-primary">Reporte Personalizado de Asistencias</h2>
+          <div class="text-muted small">I.E. Santa Beatriz de Silva – Cajamarca</div>
+        </div>
+      </div>
+
+      <form method="POST" class="row g-3 align-items-end mb-4">
+        <div class="col-md-4">
+          <label for="mes" class="form-label fw-semibold">Selecciona Mes</label>
+          <input type="month" name="mes" id="mes" class="form-control rounded-pill" value="{{ mes }}">
+        </div>
+        <div class="col-md-5 col-lg-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold">
+            <i class="bi bi-funnel-fill me-1"></i> Generar Reporte
+          </button>
+          <a href="{{ url_for('reports.reporte_mensual') }}" class="btn btn-outline-secondary rounded-pill px-3">
+            <i class="bi bi-x-lg me-1"></i> Limpiar
+          </a>
+        </div>
+        <div class="col-md-3 col-lg-4 d-flex gap-2">
+          <div class="dropdown">
+            <button class="btn btn-success rounded-pill px-3 dropdown-toggle fw-semibold" type="button" data-bs-toggle="dropdown" aria-expanded="false" {% if not mes %}disabled{% endif %}>
+              <i class="bi bi-download me-1"></i> Exportar
+            </button>
+            <ul class="dropdown-menu">
+              <li><a href="#" class="dropdown-item" onclick="event.preventDefault(); if('{{ mes }}') document.getElementById('form-excel').submit();">Excel (.xlsx)</a></li>
+              <li><a href="#" class="dropdown-item" onclick="event.preventDefault(); if('{{ mes }}') document.getElementById('form-pdf').submit();">PDF (.pdf)</a></li>
+            </ul>
+          </div>
+          <a href="/abrir_reportes" class="btn btn-outline-info rounded-pill px-3">
+            <i class="bi bi-folder2-open me-1"></i> Abrir reportes
+          </a>
+        </div>
+      </form>
+
+      <form id="form-excel" action="{{ url_for('reports.exportar_excel') }}" method="POST" style="display: none;">
+        <input type="hidden" name="mes" value="{{ mes }}">
+      </form>
+      <form id="form-pdf" action="{{ url_for('reports.exportar_pdf') }}" method="POST" style="display: none;">
+        <input type="hidden" name="mes" value="{{ mes }}">
+      </form>
+
+      {% if mes and docentes %}
+      <div class="card table-card shadow-sm border-0 p-0">
+        <div class="table-responsive tabla-ajustada">
+          <table class="table table-bordered align-middle text-center mb-0" style="background: #fcfcfc;">
+            <thead>
+              <tr class="table-primary">
+                <th rowspan="2" class="align-middle bg-primary-subtle text-primary text-start ps-2" style="min-width:180px;">Docente</th>
+                <th rowspan="2" class="align-middle bg-primary-subtle text-primary text-start ps-2" style="min-width:150px;">Cargo</th> {% for semana_data in fechas_semana %}
+                  <th colspan="{{ semana_data|length }}" class="bg-primary-subtle text-primary">Semana {{ loop.index }}</th>
+                {% endfor %}
+                <th rowspan="2" class="bg-info-subtle text-info" style="min-width:70px;">A Tiempo</th>
+                <th rowspan="2" class="bg-warning-subtle text-warning" style="min-width:70px;">Tardanzas</th>
+                <th rowspan="2" class="bg-success-subtle text-success" style="min-width:70px;">Justif./Perm.</th>
+                <th rowspan="2" class="bg-danger-subtle text-danger" style="min-width:70px;">Inasist.</th>
+                <th rowspan="2" class="bg-primary text-white" style="min-width:50px;">% Asist.</th>
+              </tr>
+              <tr class="table-light">
+                {% for semana_data in fechas_semana %}
+                  {% for fecha_obj in semana_data %}
+                    <th class="small text-secondary fw-normal" style="min-width:35px;">
+                        <div>{{ fecha_obj.day }}</div>
+                        <div style="font-size:0.8em;">{{ obtener_inicial_dia(fecha_obj) }}</div>
+                    </th>
+                  {% endfor %}
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for d_info in docentes.values() %}
+              <tr>
+                <td class="text-start ps-2 fw-medium">{{ d_info.nombre }}</td>
+                <td class="text-start ps-2">{{ d_info.cargo }}</td> {% for semana_data in fechas_semana %}
+                  {% for fecha_obj in semana_data %}
+                    <td>
+                      {% set valor = d_info.asistencias.get(fecha_obj.date()) %}
+                      {% if valor == '✔' %}
+                        <span class="text-success fs-5" title="A tiempo">✔</span>
+                      {% elif valor == '🕒' %}
+                        <span class="text-warning fs-5" title="Tarde">🕒</span>
+                      {% elif valor == '✗' %}
+                        <span class="text-danger fs-5" title="Inasistencia">✗</span>
+                      {% elif valor == 'J✔' %}
+                        <span class="text-success fs-5" title="Justificada"><i class="bi bi-file-earmark-check-fill"></i></span>
+                      {% elif valor == 'J⧗' %}
+                        <span class="text-warning fs-5" title="Justificación pendiente"><i class="bi bi-file-earmark"></i></span>
+                      {% elif valor == '🅿' %}
+                        <span class="text-primary fs-5" title="Con Permiso">🅿</span>
+                      {% elif valor == '🔕' %}
+                        <span class="text-secondary fs-5" title="Día no laborable">🔕</span>
+                      {% elif valor == '—' %}
+                        <span class="text-muted" title="Sin datos / No aplica / Día futuro">—</span>
+                      {% else %}
+                        <span class="text-muted" title="Estado desconocido">?</span>
+                      {% endif %}
+                    </td>
+                  {% endfor %}
+                {% endfor %}
+                
+                <td class="bg-info-subtle text-info"><strong>{{ d_info.total }}</strong></td>
+                <td class="bg-warning-subtle text-warning"><strong>{{ d_info.tardanzas }}</strong></td>
+                <td class="bg-success-subtle text-success"><strong>{{ d_info.justificaciones }}</strong></td>
+                <td class="bg-danger-subtle text-danger"><strong>{{ d_info.inasistencias }}</strong></td>
+                <td class="bg-primary text-white"><strong>{{ d_info.porcentaje }}%</strong></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr class="table-secondary fw-bold">
+                <td class="text-start ps-2">Total general</td>
+                <td></td> {% for semana_data in fechas_semana %}
+                  {% for _ in semana_data %}
+                    <td></td>
+                  {% endfor %}
+                {% endfor %}
+                <td class="bg-info-subtle text-info">{{ total_asistencias_global }}</td>
+                <td class="bg-warning-subtle text-warning">{{ total_tardanzas_global }}</td>
+                <td class="bg-success-subtle text-success">{{ total_justificaciones_global }}</td>
+                <td class="bg-danger-subtle text-danger">{{ total_inasistencias_global }}</td>
+                <td class="bg-primary text-white"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      {% elif request.method == 'POST' %}
+      <div class="alert alert-warning text-center my-4">
+        No se encontraron datos para el mes seleccionado.
+      </div>
+      {% else %}
+      <div class="alert alert-info text-center my-4">
+        Selecciona un mes para visualizar el reporte mensual de asistencias.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+.reporte-bg {
+  background: linear-gradient(120deg,#e3f2fd 0%, #f5faff 100%);
+  min-height: 90vh;
+}
+.table-card {
+  border-radius: 1.1rem !important;
+  margin-bottom: 0;
+  overflow-x: auto;
+}
+.tabla-ajustada {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.table th, .table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.table thead th {
+  border-bottom-width: 2px;
+}
+.bg-primary-subtle { background: #e3f2fd !important; }
+.bg-warning-subtle { background: #fff9e3 !important; }
+.bg-info-subtle { background: #e6f7fa !important; }
+.bg-danger-subtle { background: #ffeaea !important; }
+.bg-success-subtle { background: #e2fbe9 !important; }
+</style>
+{% endblock %}

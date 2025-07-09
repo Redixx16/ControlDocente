@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<style>
+  .glass-card {
+    background: rgba(255,255,255,0.93);
+    backdrop-filter: blur(7px);
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 36px rgba(33,52,110,0.16), 0 1.5px 9px rgba(41,63,136,0.07);
+    animation: fadeinup 0.7s;
+  }
+  @keyframes fadeinup {
+    0% { opacity: 0; transform: translateY(45px);}
+    100% { opacity: 1; transform: none;}
+  }
+  .reg-logo {
+    width: 58px; height: 58px; object-fit: contain;
+    margin-bottom: 8px; background: #f7fafc; border-radius: 50%;
+    box-shadow: 0 1px 8px #0d47a115;
+  }
+  .form-control:focus, .form-select:focus { border-color: #1976d2; box-shadow: 0 0 0 0.12rem #a3cdfd77; }
+  .reg-title { color: #1b263b; letter-spacing: -1px;}
+  .btn-gradient {
+    background: linear-gradient(90deg, #ef233c 0%, #ed6a5a 100%);
+    color: #fff !important;
+    border: none;
+    font-size: 1.09em;
+    box-shadow: 0 2px 14px #ef233c25;
+    transition: background .18s, box-shadow .18s;
+    font-weight: 600;
+  }
+  .btn-gradient:hover {
+    background: linear-gradient(90deg, #ed6a5a 0%, #ef233c 100%);
+    box-shadow: 0 4px 24px #ef233c35;
+    color: #fff !important;
+  }
+</style>
+<div class="d-flex align-items-center justify-content-center" style="min-height:91vh;">
+  <div class="col-11 col-sm-8 col-md-6 col-lg-5 col-xl-4">
+    <div class="glass-card p-4">
+      <div class="text-center mb-2">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="reg-logo">
+        <h2 class="fw-bold reg-title mb-1">{{ titulo }}</h2>
+        <div class="text-secondary mb-3" style="font-size:1.08em;">Formulario institucional</div>
+      </div>
+
+      <form method="POST" 
+            action="{{ url_for('teachers.registrar_docente') if accion == 'registrar' else url_for('teachers.editar_docente', dni_docente=dni_actual) }}" 
+            id="formDocente" autocomplete="off">
+        
+        <div class="mb-3 position-relative">
+          <input type="text" name="dni" class="form-control ps-5 py-2 rounded-pill" placeholder="DNI *" 
+                 value="{{ docente.get('dni', '') }}" {# Usar .get() #}
+                 {% if accion == 'editar' %}readonly{% endif %} required>
+          <i class="bi bi-upc position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+        </div>
+        
+        <div class="mb-3 position-relative">
+          <input type="text" name="nombres" class="form-control ps-5 py-2 rounded-pill" placeholder="Nombres *" 
+                 value="{{ docente.get('nombres', '') }}" required> {# Usar .get() #}
+          <i class="bi bi-person-fill position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+        </div>
+        
+        <div class="mb-3 position-relative">
+          <input type="text" name="apellido_paterno" class="form-control ps-5 py-2 rounded-pill" placeholder="Apellido Paterno *" 
+                 value="{{ docente.get('apellido_paterno', '') }}" required> {# Usar .get() #}
+          <i class="bi bi-person-vcard position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+        </div>
+        
+        <div class="mb-3 position-relative">
+          <input type="text" name="apellido_materno" class="form-control ps-5 py-2 rounded-pill" placeholder="Apellido Materno *" 
+                 value="{{ docente.get('apellido_materno', '') }}" required> {# Usar .get() #}
+          <i class="bi bi-person-vcard position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+        </div>
+
+        <div class="mb-3 position-relative">
+          <select name="tipo" class="form-select ps-5 py-2 rounded-pill" required>
+            {% set tipo_actual = docente.get('tipo') %}
+            <option value="" {% if not tipo_actual %}selected{% endif %} disabled>Seleccionar Tipo de Docente *</option>
+            <option value="Titular" {% if tipo_actual == 'Titular' %}selected{% endif %}>Titular</option>
+            <option value="Sustituto" {% if tipo_actual == 'Sustituto' %}selected{% endif %}>Sustituto</option>
+          </select>
+          <i class="bi bi-person-gear position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+        </div>
+
+        <div class="mb-3 position-relative">
+          <select name="cargo_id" class="form-select ps-5 py-2 rounded-pill" required>
+            {% set cargo_actual_id = docente.get('cargo_id') %}
+            <option value="" {% if not cargo_actual_id %}selected{% endif %} disabled>Seleccionar Cargo *</option>
+            {% for cargo_opcion in cargos %}
+              <option value="{{ cargo_opcion.id_cargo }}" 
+                      {% if cargo_actual_id is not none and cargo_actual_id|string == cargo_opcion.id_cargo|string %}selected{% endif %}>
+                {{ cargo_opcion.nombre_cargo }}
+              </option>
+            {% endfor %}
+          </select>
+          <i class="bi bi-briefcase-fill position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+        </div>
+
+        <div class="mb-3 position-relative">
+          <select name="grado_id" class="form-select ps-5 py-2 rounded-pill"> 
+            {% set grado_actual_id = docente.get('grado_id') %}
+            <option value="">Seleccionar Grado (Opcional)</option>
+            {% for grado_opcion in grados %} 
+              <option value="{{ grado_opcion.id_grado }}" 
+                      {% if grado_actual_id is not none and grado_actual_id|string == grado_opcion.id_grado|string %}selected{% endif %}>
+                {{ grado_opcion.nombre_grado }}
+              </option>
+            {% endfor %}
+          </select>
+          <i class="bi bi-diagram-2-fill position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+        </div>
+
+        <div class="mb-4 position-relative">
+          <select name="seccion_id" class="form-select ps-5 py-2 rounded-pill"> 
+            {% set seccion_actual_id = docente.get('seccion_id') %}
+            <option value="">Seleccionar Sección (Opcional)</option> 
+            {% for seccion_opcion in secciones %}
+              <option value="{{ seccion_opcion.id_seccion }}" 
+                      {% if seccion_actual_id is not none and seccion_actual_id|string == seccion_opcion.id_seccion|string %}selected{% endif %}>
+                {{ seccion_opcion.nombre_seccion }}
+              </option>
+            {% endfor %}
+          </select>
+          <i class="bi bi-collection-fill position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+        </div>
+        
+        <button type="submit" class="btn btn-gradient w-100 rounded-pill py-2 shadow-sm mb-2">
+          {% if accion == 'editar' %}
+            <i class="bi bi-save-fill me-2"></i>Guardar Cambios
+          {% else %}
+            <i class="bi bi-person-plus-fill me-2"></i>Registrar Docente
+          {% endif %}
+        </button>
+      </form>
+      <div class="text-center mt-3">
+        <a href="{{ url_for('teachers.lista_docentes') }}" class="btn btn-outline-secondary rounded-pill px-4">
+          <i class="bi bi-arrow-left me-1"></i>Volver a la Lista
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

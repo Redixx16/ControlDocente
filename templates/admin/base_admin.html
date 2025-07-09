@@ -1,0 +1,26 @@
+{% extends 'admin/base.html' %}
+
+
+{% block menu_links %}
+
+    {{ super() }}
+
+
+    <li class="nav-item">
+
+        <a href="{{ url_for('attendance.index') }}" class="btn btn-sm btn-outline-light ms-2">
+            <i class="bi bi-arrow-left-circle-fill"></i> Volver a la App Principal
+        </a>
+    </li>
+{% endblock %}
+
+{% block head_css %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_custom.css') }}">
+{% endblock %}
+
+
+{% block tail_js %}
+    {{ super() }}
+{% endblock %}

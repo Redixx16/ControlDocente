@@ -1,0 +1,13 @@
+{
+    "python.analysis.extraPaths": [
+        "./utils"
+    ],
+
+    // fuerza que .html use el lenguaje Jinja (no puro HTML+JS)
+    "files.associations": {
+        "*.html": "jinja-html"
+      },
+    // deshabilita el validador JS sobre Jinja
+    "javascript.validate.enable": false
+}
+

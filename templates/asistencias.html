@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% block title %}Asistencias{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4 sticky-top bg-white py-2" style="z-index:3;">
+    <h2 class="fw-bold mb-0">
+      <i class="bi bi-list-check text-primary me-2"></i> Asistencias Registradas
+    </h2>
+    <a href="/" class="btn btn-outline-secondary rounded-pill">
+      <i class="bi bi-arrow-left me-1"></i>Volver
+    </a>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body py-3">
+      <button id="btnGenerarInasistencias" class="btn btn-outline-danger rounded-pill fw-semibold">
+        <i class="bi bi-person-x-fill me-1"></i> Generar Inasistencias de Hoy
+      </button>
+
+      <form id="filtroFecha" class="row g-3 align-items-end mt-3">
+        <div class="col-md-4">
+          <label for="fecha" class="form-label fw-semibold">Filtrar por fecha</label>
+          <input type="date" id="fecha" name="fecha" class="form-control rounded-pill">
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary rounded-pill fw-semibold" id="btnFiltrar">
+            <i class="bi bi-filter me-1"></i> Filtrar
+          </button>
+          <button type="button" id="btnVerTodo" class="btn btn-outline-secondary rounded-pill fw-semibold">Ver todo</button>
+        </div>
+        <div class="mt-2">
+            <button id="btnExportarPDF" class="btn btn-success rounded-pill fw-semibold">
+                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar Día a PDF
+            </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="table-responsive card shadow-sm border-0 rounded-4 px-0 py-0">
+    <table id="tablaAsistencias" class="table table-hover align-middle mb-0" style="width:100%">
+      <thead class="table-primary">
+        <tr>
+          <th>N°</th>
+          <th>DNI</th>
+          <th>Nombre</th>
+          <th>Cargo</th>
+          <th>Grado/Sección</th>
+          <th>Fecha</th>
+          <th>H. Ingreso</th>
+          <th>H. Salida</th> <th>Estado y Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal fade" id="modalJustificacion" tabindex="-1" aria-labelledby="modalJustificacionLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form action="{{ url_for('attendance.registrar_justificacion') }}" method="POST" enctype="multipart/form-data" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalJustificacionLabel">Justificar Inasistencia/Tardanza</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="asistencia_id" id="asistencia_id_modal">
+        <div class="mb-3">
+          <label for="motivo" class="form-label">Motivo</label>
+          <textarea class="form-control" name="motivo" required></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="archivo" class="form-label">Archivo justificante (opcional)</label>
+          <input type="file" name="archivo_justificante" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Enviar Justificación</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/sweetalert2.min.js') }}"></script>
+
+<script>
+$(document).ready(function () {
+  const table = $('#tablaAsistencias').DataTable({
+    processing: true,
+    serverSide: true,
+    ajax: {
+      url: "{{ url_for('attendance.asistencias_data') }}",
+      type: 'POST',
+      data: function (d) {
+        d.fecha = $('#fecha').val();
+      }
+    },
+    language: { url: '/static/js/lang/es-ES.json' },
+    
+    columns: [
+      { // Columna N°
+        data: null,
+        searchable: false,
+        orderable: false,
+        render: function (data, type, row, meta) {
+          return meta.row + meta.settings._iDisplayStart + 1;
+        }
+      },
+      { data: 1 }, // DNI
+      { data: 2 }, // Nombre
+      { data: 3 }, // Cargo
+      { data: 4 }, // Grado/Sección
+      { data: 5 }, // Fecha
+      { data: 6 }, // Hora de Ingreso
+      { data: 7 }, // Hora de Salida 
+      { 
+        data: 8,
+        orderable: false,
+        searchable: false,
+        render: function (data, type, row) {
+          const estado              = row[8]; 
+          const estadoJustificacion = row[9]; 
+          const puedeJustificar     = row[10];
+          const asistenciaId        = row[0]; 
+
+          let html = '';
+
+          if (estadoJustificacion === 'Aprobada') {
+            html = '<span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Justificada</span>';
+          } else if (estadoJustificacion === 'Pendiente') {
+            html = '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i> Pendiente</span>';
+          } else if (estado === 'A tiempo') {
+            html = '<span class="badge-estado-tiempo"><i class="bi bi-check2-circle me-1"></i> A tiempo</span>';
+          } else if (estado === 'Tarde' || estado === 'Inasistencia') {
+            const badge = estado === 'Tarde' ? 'badge-estado-tarde' : 'badge-estado-inasistencia';
+            const icon = estado === 'Tarde' ? 'bi-clock-history' : 'bi-x-circle';
+            html = `<span class="${badge}"><i class="bi ${icon} me-1"></i> ${estado}</span>`;
+            if (puedeJustificar) {
+              html += `<br><button class="btn btn-sm btn-outline-primary mt-2 justificar-btn" data-id="${asistenciaId}">Justificar</button>`;
+            }
+          } else {
+            html = '<span class="badge-estado-desconocido"><i class="bi bi-dash-circle me-1"></i> Sin estado</span>';
+          }
+          return html;
+        }
+      }
+    ],
+    order: [[5, 'desc']], 
+    stripeClasses: [],
+  });
+
+
+  $('#filtroFecha').on('submit', function (e) {
+    e.preventDefault();
+    table.ajax.reload();
+  });
+
+  $('#btnVerTodo').on('click', function () {
+    $('#fecha').val('');
+    table.ajax.reload();
+  });
+  
+  $('#btnGenerarInasistencias').on('click', function () {
+    const fechaHoy = new Date().toLocaleDateString('en-CA');
+    Swal.fire({
+      title: '¿Registrar inasistencias?',
+      text: 'Se marcarán como inasistentes los docentes que no registraron asistencia hoy.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, generar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.post('/generar_inasistencias', { fecha: fechaHoy }, function (data) {
+          Swal.fire({
+            title: 'Resultado',
+            text: data.mensaje || "Proceso completado.",
+            icon: data.status || "success"
+          }).then(() => {
+            table.ajax.reload();
+          });
+        }).fail(() => {
+          Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar las inasistencias.' });
+        });
+      }
+    });
+  });
+
+  $('#tablaAsistencias tbody').on('click', '.justificar-btn', function (e) {
+    const asistenciaId = $(this).data('id');
+    const rowData = table.row($(this).closest('tr')).data();
+    
+
+    const estadoJustificacion = rowData[9];
+
+    if (estadoJustificacion) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Ya existe una justificación',
+        text: `Esta asistencia ya tiene una justificación en estado "${estadoJustificacion}".`,
+        confirmButtonText: 'Aceptar'
+      });
+      return false;
+    }
+
+    $('#asistencia_id_modal').val(asistenciaId);
+    $('#modalJustificacion').modal('show');
+  });
+
+  $('#btnExportarPDF').on('click', function() {
+    let fecha = $('#fecha').val();
+
+    if (!fecha) {
+
+        const hoy = new Date();
+        const offset = hoy.getTimezoneOffset();
+        const hoyLocal = new Date(hoy.getTime() - (offset*60*1000));
+        fecha = hoyLocal.toISOString().split('T')[0];
+    }
+
+
+    const url = `/exportar/diario/${fecha}`;
+    window.location.href = url;
+});
+});
+</script>
+{% endblock %}

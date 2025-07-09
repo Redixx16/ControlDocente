@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block content %}
+<style>
+  .glass-card {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(8px);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 36px rgba(30,52,110,0.16), 0 1.5px 9px rgba(41,63,136,0.06);
+    animation: float-in 0.5s cubic-bezier(.28,1.6,.52,.93);
+  }
+  @keyframes float-in {
+    from { opacity: 0; transform: translateY(40px) scale(0.97);}
+    to   { opacity: 1; transform: none;}
+  }
+  .login-logo {
+    width: 65px; height: 65px; object-fit: contain;
+    box-shadow: 0 1.5px 8px #0d47a125; border-radius: 50%;
+    background: #f8fafc;
+    margin-bottom: 12px;
+  }
+  .show-hide {
+    cursor: pointer; font-size:1.2em; color: #0d47a1b5;
+    right: 18px; top: 55%; transform: translateY(-50%);
+    position: absolute; z-index: 2;
+  }
+  .login-err {
+    min-height: 36px;
+  }
+</style>
+<div class="d-flex align-items-center justify-content-center" style="min-height: 92vh;">
+  <div class="col-11 col-sm-8 col-md-6 col-lg-4">
+    <div class="glass-card p-4">
+      <div class="text-center mb-3">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="login-logo">
+        <h2 class="fw-bold mb-1" style="letter-spacing:-1px; color:#0d47a1;">Bienvenido</h2>
+        <div class="text-secondary mb-2" style="font-size: 1.1em;">Acceso | Control Docente</div>
+      </div>
+      <form method="POST" autocomplete="off">
+        {% if error %}
+        <div class="alert alert-danger text-center py-2 login-err">{{ error }}</div>
+        {% else %}
+        <div class="login-err"></div>
+        {% endif %}
+        <div class="mb-3 position-relative">
+          <input type="text" name="usuario" class="form-control ps-5 py-2 rounded-pill shadow-sm" placeholder="Usuario" required autofocus>
+          <i class="bi bi-person-circle position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+        </div>
+        <div class="mb-3 position-relative">
+          <input type="password" name="clave" id="clave" class="form-control ps-5 py-2 rounded-pill shadow-sm" placeholder="Contraseña" required>
+          <i class="bi bi-key-fill position-absolute top-50 start-0 translate-middle-y ms-3 text-primary"></i>
+          <i class="bi bi-eye-slash show-hide" id="togglePass" title="Mostrar/Ocultar"></i>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-semibold py-2 mb-2 shadow-sm">
+          <i class="bi bi-box-arrow-in-right me-1"></i> Ingresar
+        </button>
+      </form>
+      <div class="text-center mt-3 small text-muted">
+       © {{ year }} I.E. Santa Beatriz de Silva
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const passInput = document.getElementById('clave');
+    const toggle = document.getElementById('togglePass');
+    toggle.onclick = function(){
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        toggle.classList.remove('bi-eye-slash');
+        toggle.classList.add('bi-eye');
+        toggle.title = 'Ocultar contraseña';
+      } else {
+        passInput.type = 'password';
+        toggle.classList.remove('bi-eye');
+        toggle.classList.add('bi-eye-slash');
+        toggle.title = 'Mostrar contraseña';
+      }
+    };
+  });
+</script>
+{% endblock %}

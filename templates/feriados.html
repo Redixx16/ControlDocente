@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% block title %}Fechas No Laborables{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+            <i class="fas fa-calendar-times text-primary fs-4"></i>
+        </div>
+        <div>
+            <h2 class="mb-0 text-primary fw-bold">Fechas No Laborables</h2>
+            <small class="text-muted">Gestiona los días feriados e institucionales</small>
+        </div>
+    </div>
+
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light border-0">
+            <h5 class="mb-0 text-secondary">
+                <i class="fas fa-plus-circle me-2"></i>Agregar Nueva Fecha
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('feriados.agregar_feriado') }}" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-secondary">
+                        <i class="fas fa-calendar me-1"></i>Fecha
+                    </label>
+                    <input type="date" name="fecha" class="form-control border-2" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-secondary">
+                        <i class="fas fa-edit me-1"></i>Descripción
+                    </label>
+                    <input type="text" name="descripcion" class="form-control border-2" 
+                           placeholder="Ej: Día de la Independencia" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-secondary">
+                        <i class="fas fa-tag me-1"></i>Tipo
+                    </label>
+                    <select name="tipo" class="form-select border-2" required>
+                        <option value="Feriado">🏛️ Feriado</option>
+                        <option value="Institucional">🏫 Institucional</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success w-100 btn-lg shadow-sm">
+                        <i class="fas fa-plus me-2"></i>Agregar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white border-0">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Fechas Registradas
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if feriados %}
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="fw-semibold">
+                                <i class="fas fa-calendar text-primary me-2"></i>Fecha
+                            </th>
+                            <th class="fw-semibold">
+                                <i class="fas fa-info-circle text-primary me-2"></i>Descripción
+                            </th>
+                            <th class="fw-semibold">
+                                <i class="fas fa-tag text-primary me-2"></i>Tipo
+                            </th>
+                            <th class="fw-semibold text-center">
+                                <i class="fas fa-cog text-primary me-2"></i>Acción
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in feriados %}
+                        <tr class="align-middle">
+                            <td class="fw-medium">{{ f.fecha }}</td>
+                            <td>{{ f.descripcion }}</td>
+                            <td>
+                                {% if f.tipo == 'Feriado' %}
+                                    <span class="badge bg-primary">🏛️ {{ f.tipo }}</span>
+                                {% else %}
+                                    <span class="badge bg-info">🏫 {{ f.tipo }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="#" 
+                                class="btn btn-outline-danger btn-sm shadow-sm btn-eliminar" 
+                                data-url="{{ url_for('feriados.eliminar_feriado', fecha=f.fecha) }}"
+                                title="Eliminar fecha">
+                                <i class="fas fa-trash-alt me-1"></i>Eliminar
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="text-muted mb-3">
+                    <i class="fas fa-calendar-times fa-3x opacity-50"></i>
+                </div>
+                <h5 class="text-muted">No hay fechas registradas</h5>
+                <p class="text-muted mb-0">Agrega la primera fecha no laborable usando el formulario</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    border-radius: 12px;
+}
+.form-control, .form-select {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+.table th {
+    border-top: none;
+    padding: 1rem 0.75rem;
+}
+.table td {
+    padding: 0.875rem 0.75rem;
+    vertical-align: middle;
+}
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const botonesEliminar = document.querySelectorAll('.btn-eliminar');
+
+    botonesEliminar.forEach(boton => {
+        boton.addEventListener('click', function (e) {
+            e.preventDefault();
+            const url = this.getAttribute('data-url');
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

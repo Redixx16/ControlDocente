@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}I.E.P. Santa Beatriz de Silva{% endblock %}</title>
+  <!-- Fuentes y CSS -->
+  <link href="{{ url_for('static', filename='css/fonts.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/all.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/dataTables.bootstrap5.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/sweetalert2.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+  <style>
+    body {
+      background: #f4f6fa;
+      min-height: 100vh;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 255px;
+      background: linear-gradient(180deg, #1b263b 80%, #415a77 100%);
+      color: #fff;
+      z-index: 1040;
+      transition: all 0.3s;
+      box-shadow: 2px 0 16px 0 rgba(0,0,0,0.07);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding-top: 0;
+    }
+    .sidebar .brand {
+      display: flex;
+      align-items: center;
+      padding: 26px 24px 14px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .sidebar .brand img {
+      height: 44px;
+      margin-right: 12px;
+    }
+    .sidebar .brand span {
+      font-weight: 600;
+      font-size: 1.16rem;
+      letter-spacing: 0.5px;
+    }
+    .sidebar .nav-link {
+      color: #e0e6ed;
+      font-size: 1.03rem;
+      padding: 13px 26px;
+      display: flex;
+      align-items: center;
+      border-radius: 32px 0 0 32px;
+      transition: background 0.2s, color 0.2s;
+      margin-right: 10px;
+      margin-bottom: 7px;
+      gap: 8px;
+    }
+    .sidebar .nav-link.active, 
+    .sidebar .nav-link:hover {
+      background: #778da9;
+      color: #fff;
+      font-weight: 600;
+    }
+    .sidebar .nav-link i {
+      font-size: 1.21em;
+    }
+    .sidebar .sidebar-footer {
+      padding: 14px 24px;
+      background: rgba(33, 37, 41, 0.12);
+      font-size: 0.93em;
+      color: #bfc9d4;
+      text-align: center;
+    }
+    /* MAIN CONTENT */
+    .main-content {
+      margin-left: 255px;
+      padding: 40px 26px 26px 26px;
+      min-height: 100vh;
+      transition: margin 0.3s;
+    }
+    /* Responsive Sidebar */
+    @media (max-width: 991px) {
+      .sidebar {
+        left: -255px;
+      }
+      .sidebar.show {
+        left: 0;
+      }
+      .main-content {
+        margin-left: 0;
+        padding-top: 90px;
+      }
+      .sidebar-backdrop {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(30,34,40,0.45);
+        z-index: 1039;
+        display: none;
+      }
+      .sidebar-backdrop.show {
+        display: block;
+      }
+      .sidebar-toggle-btn {
+        position: fixed;
+        top: 15px; left: 16px;
+        z-index: 1100;
+        background: #1b263b;
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 45px; height: 45px;
+        display: flex;
+        align-items: center; justify-content: center;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      }
+    }
+    /* Sidebar header para módulos con cabecera personalizada */
+    .docentes-sidebar-header {
+      background: transparent;
+      padding: 24px 0 0 0;
+    }
+    .btn-gradient {
+      background: linear-gradient(90deg, #ef233c 0%, #ed6a5a 100%);
+      color: #fff !important;
+      border: none;
+      box-shadow: 0 3px 18px rgba(239,35,60,0.09);
+      transition: background 0.15s, box-shadow 0.15s;
+      font-size: 1.07em;
+    }
+    .btn-gradient:hover {
+      background: linear-gradient(90deg, #ed6a5a 0%, #ef233c 100%);
+      box-shadow: 0 5px 28px rgba(239,35,60,0.17);
+      color: #fff !important;
+    }
+    .custom-search {
+      border-radius: 40px;
+      overflow: hidden;
+      border: 2px solid #1976d2;
+      background: #fff;
+      box-shadow: 0 2px 7px rgba(0,0,0,0.04);
+    }
+    .custom-search .form-control {
+      border: none;
+      background: transparent;
+      box-shadow: none !important;
+      padding-left: 0.9em;
+      font-size: 1.1em;
+    }
+    .custom-search .input-group-text {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding-left: 1.1em;
+    }
+    /* Scrollbar personalizado */
+    ::-webkit-scrollbar {
+      width: 8px;
+      background: #eee;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #d2d9e6;
+      border-radius: 5px;
+    }
+    .nav-asistencias {
+      position: relative;
+    }
+
+    .nav-asistencias .submenu-asistencias {
+      position: absolute;
+      top: 0;
+      left: 100%;
+      background: #324a5f;
+      border-radius: 8px;
+      display: none;
+      min-width: 230px;
+      box-shadow: 2px 4px 12px rgba(0,0,0,0.15);
+      padding: 8px 0;
+      z-index: 1051;
+    }
+
+    .nav-asistencias:hover .submenu-asistencias {
+      display: block;
+    }
+
+    .nav-asistencias .submenu-asistencias li a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      color: #e0e6ed;
+      font-size: 0.95em;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .nav-asistencias .submenu-asistencias li a:hover {
+      background-color: #415a77;
+      color: #fff;
+    }
+
+    .nav-asistencias > a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    /* --- POSICIONAMIENTO DEL LI PADRE --- */
+    .nav-docentes,
+    .nav-asistencias {
+      position: relative;
+    }
+
+    /* --- ESTILOS COMUNES PARA EL SUBMENÚ --- */
+    .nav-docentes .submenu-docentes,
+    .nav-asistencias .submenu-asistencias {
+      position: absolute;
+      top: 0;
+      left: 100%;
+      background: #324a5f;
+      border-radius: 8px;
+      display: none;
+      min-width: 230px;
+      box-shadow: 2px 4px 12px rgba(0,0,0,0.15);
+      padding: 8px 0;
+      z-index: 1051;
+    }
+
+    /* --- MOSTRAR AL HACER HOVER --- */
+    .nav-docentes:hover .submenu-docentes,
+    .nav-asistencias:hover .submenu-asistencias {
+      display: block;
+    }
+
+    /* --- ESTILOS DE LOS ENLACES DEL SUBMENÚ --- */
+    .nav-docentes .submenu-docentes li a,
+    .nav-asistencias .submenu-asistencias li a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      color: #e0e6ed;
+      font-size: 0.95em;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .nav-docentes .submenu-docentes li a:hover,
+    .nav-asistencias .submenu-asistencias li a:hover {
+      background-color: #415a77;
+      color: #fff;
+    }
+
+    .nav-docentes > a,
+    .nav-asistencias > a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    /* --- LI PADRE --- */
+    .nav-config {
+      position: relative;
+    }
+
+    /* --- SUBMENÚ --- */
+    .nav-config .submenu-config {
+      position: absolute;
+      top: 0;
+      left: 100%;
+      background: #324a5f;
+      border-radius: 8px;
+      display: none;
+      min-width: 230px;
+      box-shadow: 2px 4px 12px rgba(0,0,0,0.15);
+      padding: 8px 0;
+      z-index: 1051;
+    }
+
+    /* --- HOVER PARA MOSTRAR --- */
+    .nav-config:hover .submenu-config {
+      display: block;
+    }
+
+    /* --- LINKS DENTRO DEL SUBMENÚ --- */
+    .nav-config .submenu-config li a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      color: #e0e6ed;
+      font-size: 0.95em;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .nav-config .submenu-config li a:hover {
+      background-color: #415a77;
+      color: #fff;
+    }
+
+    .nav-config > a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+  <!-- BOTÓN TOGGLE SIDEBAR-->
+  <button class="sidebar-toggle-btn d-lg-none" id="sidebarToggle" aria-label="Mostrar menú">
+    <i class="bi bi-list" style="font-size:1.5em"></i>
+  </button>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div>
+      <div class="brand">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+        <span>
+          I.E. 82008<br>
+          <span style="font-size:0.95em;font-weight:300;">Santa Beatriz de Silva</span>
+        </span>
+      </div>
+      <ul class="nav flex-column mt-4">
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
+            <i class="bi bi-house-door-fill"></i> Inicio
+          </a>
+        </li>
+        {% if session.get('usuario') %}
+        <li class="nav-item mb-1 ms-2" style="pointer-events: none;">
+          {% if session['rol_id'] == 1 %}
+            <span class="badge bg-primary">Administrador</span>
+          {% elif session['rol_id'] == 2 %}
+            <span class="badge bg-info text-dark">Director</span>
+          {% else %}
+            <span class="badge bg-secondary">Invitado</span>
+          {% endif %}
+        </li>
+        <li class="nav-item nav-docentes">
+          <a class="nav-link {% if request.path.startswith('/docentes') %}active{% endif %}" href="#">
+            <i class="bi bi-people-fill"></i> Docentes
+            <i class="bi bi-chevron-right ms-auto"></i>
+          </a>
+          <ul class="submenu-docentes">
+            <li><a href="/docentes/lista"><i class="bi bi-list-ul"></i> Lista de Docentes</a></li>
+            <li><a href="/docentes/registrar"><i class="bi bi-person-plus"></i> Registrar Docente</a></li>
+            <li><a href="/docentes/horarios"><i class="bi bi-clock-history"></i> Horarios</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-asistencias">
+          <a class="nav-link {% if request.path.startswith('/asistencias') or request.path.startswith('/justificaciones') %}active{% endif %}" href="#">
+            <i class="bi bi-list-check"></i> Asistencias
+            <i class="bi bi-chevron-right ms-auto"></i>
+          </a>
+          <ul class="submenu-asistencias">
+            <li><a href="/asistencias"><i class="bi bi-clipboard-check"></i> Registro de Asistencia</a></li>
+            <li><a href="/justificaciones"><i class="bi bi-calendar-x"></i> Justificaciones</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-config">
+          <a class="nav-link {% if request.path.startswith('/permisos') or request.path.startswith('/feriados') %}active{% endif %}" href="#">
+            <i class="bi bi-gear-fill"></i> Configuración
+            <i class="bi bi-chevron-right ms-auto"></i>
+          </a>
+          <ul class="submenu-config">
+            <li><a href="/permisos"><i class="bi bi-person-dash"></i> Permisos</a></li>
+            <li><a href="/feriados"><i class="bi bi-calendar3"></i> Feriados</a></li>
+          </ul>
+        </li>
+        {% if session['rol_id'] == 1 or session['rol_id'] == 2 %}
+        <li class="nav-item">
+          <a class="nav-link {% if '/reportes/dashboard' in request.path %}active{% endif %}" href="/reportes/dashboard">
+            <i class="bi bi-bar-chart-fill"></i> Dashboard
+          </a>
+          
+        </li>
+        {% endif %}
+      
+          {% if session['rol_id'] == 1 %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.path.startswith('/admin') %}active{% endif %}" href="/admin">
+              <i class="bi bi-sliders"></i> Panel de Admin
+            </a>
+          </li>
+          {% endif %}
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">
+              <i class="bi bi-box-arrow-right"></i> Salir
+            </a>
+          </li>
+
+        {% else %}
+            <li class="nav-item">
+              <a class="nav-link {% if request.path == '/login' %}active{% endif %}" href="/login">
+                <i class="bi bi-box-arrow-in-right"></i> Acceder
+              </a>
+            </li>
+        {% endif %}
+      </ul>
+    </div>
+    <div class="sidebar-footer">
+      © 2025 I.E. Santa Beatriz de Silva <br> Cajamarca
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="main-content">
+    <!-- ALERTAS FLASH -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div id="flash-container">
+      {% for category, message in messages %}
+        <div class="flash-toast shadow-lg flash-{{ category }} animate__animated animate__fadeInRight">
+          <div class="d-flex align-items-center gap-2">
+            <span class="flash-icon">
+              {% if category == 'success' %}
+                <i class="bi bi-check-circle-fill"></i>
+              {% elif category == 'info' %}
+                <i class="bi bi-info-circle-fill"></i>
+              {% elif category == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill"></i>
+              {% elif category == 'danger' or category == 'error' %}
+                <i class="bi bi-x-circle-fill"></i>
+              {% else %}
+                <i class="bi bi-bell-fill"></i>
+              {% endif %}
+            </span>
+            <span class="flex-fill flash-text">{{ message }}</span>
+            <button type="button" class="btn-close btn-close-white ms-2" aria-label="Cerrar"></button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- SCRIPTS -->
+  <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dataTables.bootstrap5.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sweetalert2.min.js') }}"></script>
+  {% block scripts %}{% endblock %}
+    {% block modals %}{% endblock %}
+  </body>
+</html>
+
+  <script>
+    $(function () {
+      setTimeout(function () {
+        $('.flash-alert').fadeTo(500, 0).slideUp(500, function () {
+          $(this).remove();
+        });
+      }, 3000);
+
+      // Sidebar toggle para móvil
+      $('#sidebarToggle').on('click', function() {
+        $('#sidebar').toggleClass('show');
+        $('#sidebarBackdrop').toggleClass('show');
+      });
+      $('#sidebarBackdrop').on('click', function() {
+        $('#sidebar').removeClass('show');
+        $(this).removeClass('show');
+      });
+    });
+  </script>
+  
+  <script>
+  $(function () {
+    setTimeout(function () {
+      $('.flash-toast').fadeTo(500, 0).slideUp(350, function () {
+        $(this).remove();
+      });
+    }, 3500);
+
+    $('#flash-container').on('click', '.btn-close', function() {
+      $(this).closest('.flash-toast').fadeOut(300, function(){ $(this).remove(); });
+    });
+  });
+</script>
+
+</body>
+</html>

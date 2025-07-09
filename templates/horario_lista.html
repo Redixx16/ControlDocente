@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}Horarios de Docentes{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="card shadow-sm p-4">
+        <h2 class="fw-bold mb-4">
+            <i class="bi bi-calendar-check text-primary me-2"></i>Horarios de Docentes
+        </h2>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle text-center" style="table-layout: fixed; width: 100%;">
+                <thead class="table-light">
+                    <tr>
+
+                        <th rowspan="2" class="align-middle" style="width: 8%;">DNI</th>
+                        <th rowspan="2" class="align-middle text-start" style="width: 17%;">Nombre</th>
+                        <th colspan="5" class="text-center">Horario Efectivo (Semanal/Permisos)</th>
+                        <th rowspan="2" class="align-middle" style="width: 10%;">Estado</th>
+                        <th rowspan="2" class="align-middle" style="width: 14%;">Relaciones</th>
+                        <th rowspan="2" class="align-middle" style="width: 7%;">Acción</th>
+                    </tr>
+                    <tr>
+                        {% for dia in dias %}
+                            <th style="width: 10%;">{{ dia|replace('Miercoles', 'Miércoles') }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in docentes %}
+                    <tr>
+                        <td>{{ doc.dni }}</td>
+                        <td class="text-start">
+                            <strong>{{ doc.nombre }}</strong> <br>
+                            <small class="text-muted">({{ doc.tipo }})</small>
+                        </td>
+                        {% for dia in dias %}
+                            <td>
+                                {% if doc.horarios[dia] %}
+                                    {% if doc.horarios[dia].origen == 'regular' %}
+                                        <span class="badge bg-success" style="white-space: normal; display: inline-block;">
+                                            {{ doc.horarios[dia].hora_inicio }} - {{ doc.horarios[dia].hora_fin }}
+                                        </span>
+                                    {% elif doc.horarios[dia].origen == 'permiso' %}
+                                        <span class="badge bg-warning text-dark" style="white-space: normal; display: inline-block;"
+                                              title="Permiso activo el {{ doc.horarios[dia].fecha_afectada if doc.horarios[dia].fecha_afectada else 'día completo' }}">
+                                            Permiso
+                                        </span>
+                                    {% elif doc.horarios[dia].origen and doc.horarios[dia].origen.startswith('sustitucion') %}
+                                        <span class="badge bg-info text-dark" style="white-space: normal; display: inline-block;"
+                                              title="{{ doc.horarios[dia].origen }}">
+                                            Sust. {{ doc.horarios[dia].hora_inicio }} - {{ doc.horarios[dia].hora_fin }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                        <td>
+                            {% if doc.estado_permiso %}
+                                <span class="badge bg-danger">De Permiso</span><br>
+                                <small class="text-muted" title="{{ doc.estado_permiso.motivo }}">
+                                    Desde {{ doc.estado_permiso.desde }}<br>
+                                    Hasta {{ doc.estado_permiso.hasta }}
+                                </small>
+                            {% else %}
+                                <span class="badge bg-secondary">Disponible</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc.sustituyendo_a %}
+                                <p class="mb-1 text-start"><small>Sustituye a:</small></p>
+                                <ul class="list-unstyled mb-0 small text-start">
+                                {% for s in doc.sustituyendo_a %}
+                                    <li><i class="bi bi-arrow-right-circle-fill text-info me-1"></i> {{ s.nombre }}</li>
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
+                            {% if doc.siendo_sustituido_por %}
+                                <p class="mb-1 {% if doc.sustituyendo_a %}mt-2{% endif %} text-start"><small>Sustituido por:</small></p>
+                                <ul class="list-unstyled mb-0 small text-start">
+                                {% for s in doc.siendo_sustituido_por %}
+                                    <li><i class="bi bi-arrow-left-circle-fill text-warning me-1"></i> {{ s.nombre }}</li>
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
+                            {% if not doc.sustituyendo_a and not doc.siendo_sustituido_por and not doc.estado_permiso %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('teachers.gestionar_horario', dni=doc.dni) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil-square"></i> Gestionar
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">No hay docentes registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

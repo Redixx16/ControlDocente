@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Todas las Justificaciones{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+  <h2 class="fw-bold mb-4">
+    <i class="bi bi-journal-text me-2 text-primary"></i> Todas las Justificaciones
+  </h2>
+  {% if justificaciones %}
+  <div class="table-responsive rounded shadow-sm">
+    <table id="tabla-justificaciones" class="table table-striped table-hover table-bordered align-middle">
+      <thead class="table-primary">
+        <tr>
+          <th>#</th>
+          <th>DNI</th>
+          <th>Nombre</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Motivo</th>
+          <th>Archivo</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for j in justificaciones %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ j['dni'] }}</td>
+          <td>{{ j['nombre'] }}</td>
+          {% set partes = j['fecha'][:10].split('-') %}
+          <td>{{ partes[2] }}/{{ partes[1] }}/{{ partes[0] }}</td>
+          <td>{{ j['hora_registro'][:5] if j['hora_registro'] else '—' }}</td>
+          <td>{{ j['motivo'] }}</td>
+          <td>
+            {% if j['archivo_justificante'] %}
+              <a href="/abrir_justificaciones" class="btn btn-outline-info rounded-pill px-3">
+                <i class="bi bi-folder2-open me-1"></i> Abrir justificaciones
+              </a>
+            {% else %}
+              <span class="text-muted">Sin archivo</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if session.get('rol_id') in [1, 2] %}
+              {% if j['estado'] == 'Aprobada' %}
+                <span class="badge bg-success">Aprobada</span>
+              {% else %}
+                <form action="{{ url_for('attendance.aprobar_justificacion') }}" method="post" style="display:inline;">
+                  <input type="hidden" name="justificacion_id" value="{{ j['id'] }}">
+                  <button type="submit" class="btn btn-sm btn-success">Aprobar</button>
+                </form>
+              {% endif %}
+            {% else %}
+              <span class="badge {{ 'bg-success' if j['estado'] == 'Aprobada' else 'bg-secondary' }}">
+                {{ j['estado'] or 'Pendiente' }}
+              </span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="alert alert-info">No se han registrado justificaciones todavía.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <!-- DataTables -->
+  <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dataTables.bootstrap5.min.js') }}"></script>
+  <script>
+    $(document).ready(function() {
+      $('#tabla-justificaciones').DataTable({
+        language: {
+          "decimal": "",
+          "emptyTable": "No hay información",
+          "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+          "infoEmpty": "Mostrando 0 to 0 of 0 registros",
+          "infoFiltered": "(Filtrado de _MAX_ total registros)",
+          "infoPostFix": "",
+          "thousands": ",",
+          "lengthMenu": "Mostrar _MENU_ registros",
+          "loadingRecords": "Cargando...",
+          "processing": "Procesando...",
+          "search": "Buscar:",
+          "zeroRecords": "Sin resultados encontrados",
+          "paginate": {
+            "first": "Primero",
+            "last": "Ultimo",
+            "next": "Siguiente",
+            "previous": "Anterior"
+          }
+        },
+        order: [],
+        pageLength: 10,
+        lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "Todos"] ],
+      });
+    });
+  </script>
+{% endblock %}

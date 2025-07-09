@@ -1,0 +1,595 @@
+/* Estilo base del body: tipografía limpia y fondo claro */
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #f4f6fa;
+  min-height: 100vh;
+}
+
+/* ---- SIDEBAR ---- */
+/* Enlace activo o con hover dentro del sidebar: color destacado */
+.sidebar .nav-link.active, 
+.sidebar .nav-link:hover {
+  background: #778da9;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Color de marca en el nombre del sistema (o logo) */
+.sidebar .brand span {
+  color: #ffdd57;
+}
+
+/* ---- CONTENEDOR PRINCIPAL ---- */
+/* Evitamos que el contenido principal se centre por error */
+.main-content, main {
+  margin-left: 255px;
+  padding: 38px 20px 30px 20px;
+  min-height: 100vh;
+  width: auto;
+  display: block !important;
+  align-items: initial !important;
+  justify-content: initial !important;
+}
+
+/* En pantallas pequeñas, el contenido ocupa todo el ancho */
+@media (max-width: 991px) {
+  .main-content, main {
+    margin-left: 0 !important;
+    padding-top: 95px !important;
+  }
+}
+
+/* ---- BOTONES PRINCIPALES ---- */
+/* Botón con degradado personalizado, tipo "acción principal" */
+.btn-gradient {
+  background: linear-gradient(90deg, #ef233c 0%, #ed6a5a 100%);
+  color: #fff !important;
+  border: none;
+  box-shadow: 0 3px 18px rgba(239,35,60,0.09);
+  transition: background 0.15s, box-shadow 0.15s;
+  font-size: 1.07em;
+}
+
+.btn-gradient:hover {
+  background: linear-gradient(90deg, #ed6a5a 0%, #ef233c 100%);
+  box-shadow: 0 5px 28px rgba(239,35,60,0.16);
+}
+
+/* Estilo para los botones primarios estándar */
+.btn-primary {
+  background-color: #d62828;
+  border: none;
+}
+.btn-primary:hover {
+  background-color: #a71b1b;
+}
+
+/* Botones con borde y efecto hover */
+.btn-outline-info, .btn-outline-primary, .btn-outline-danger {
+  background: #f8fcff;
+  border: none;
+  box-shadow: 0 1px 4px #dbeafe57;
+  font-size: 1.13em;
+  transition: background 0.13s, color 0.13s, transform 0.11s;
+  margin: 0 1px;
+}
+
+.btn-outline-info:hover {
+  background: #b3e7fc;
+  color: #075ea7;
+  transform: scale(1.13);
+}
+.btn-outline-primary:hover {
+  background: #bbd1fa;
+  color: #073ff1;
+  transform: scale(1.13);
+}
+.btn-outline-danger:hover {
+  background: #ffd8d8;
+  color: #c80000;
+  transform: scale(1.13);
+}
+
+/* ---- INPUTS Y BÚSQUEDA ---- */
+/* Campos de texto con diseño moderno y redondeado */
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="month"],
+.search-input {
+  border-radius: 50px !important;
+  padding-left: 2.3rem;
+  background: #f9fbfe;
+  border: 2px solid #0d47a110;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  transition: border 0.2s, box-shadow 0.2s;
+  font-size: 1.05rem;
+}
+
+/* Texto placeholder en color gris */
+input::placeholder, .search-input::placeholder {
+  color: #6c757d;
+}
+
+/* Foco en inputs con realce suave */
+input:focus, .search-input:focus {
+  border-color: #00509e;
+  box-shadow: 0 0 0 0.18rem rgba(0, 80, 158, 0.15);
+  background: #fff;
+}
+
+/* Contenedor para campo de búsqueda principal */
+.search-wrapper {
+  max-width: 480px;
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+/* Input de búsqueda con diseño personalizado */
+.custom-search {
+  border-radius: 40px;
+  overflow: hidden;
+  border: 2px solid #0d47a1;
+  background-color: #f9fbfe;
+  box-shadow: 0 2px 7px rgba(0,0,0,0.04);
+}
+
+.custom-search .form-control,
+.custom-search .search-input {
+  border: none;
+  padding: 0.8rem 1.25rem;
+  font-size: 1.05rem;
+  background-color: #f9fbfe;
+}
+
+.custom-search .form-control:focus,
+.custom-search .search-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Ícono al inicio del input */
+.icon-container {
+  background-color: #fff;
+  padding-left: 1rem;
+  padding-right: 0.5rem;
+}
+
+/* ---- BADGES ---- */
+/* Pequeñas etiquetas de estado */
+.badge {
+  font-size: 0.93rem;
+  padding: 0.39em 0.8em;
+  border-radius: 0.65rem;
+}
+
+/* ---- TABLAS ---- */
+.table th, .table td {
+  vertical-align: middle;
+}
+
+.table-dark th {
+  background-color: #08357c !important;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f2f2f2;
+}
+
+/* ---- PIE DE PÁGINA ---- */
+footer, .sidebar-footer {
+  background: #08357c !important;
+  color: #ffffff;
+  text-align: center;
+  padding: 0.75rem 0;
+  font-size: 0.93rem;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+/* ---- ALERTAS FLASH ---- */
+#flash-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 1080;
+}
+
+.flash-alert {
+  min-width: 260px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.15);
+  border-left: 6px solid currentColor;
+  opacity: 0.95;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.flash-alert .btn-close {
+  display: none;
+}
+
+/* ---- GRILLAS Y RESPONSIVE ---- */
+.row.g-4 {
+  gap: 1.8rem 0.4rem;
+}
+
+@media (max-width: 1200px) {
+  .main-content, main {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+@media (max-width: 991px) {
+  .main-content, main {
+    margin-left: 0 !important;
+    padding-top: 90px !important;
+  }
+  .row.g-4 > [class^='col-'] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* ---- SCROLLBAR PERSONALIZADA ---- */
+::-webkit-scrollbar {
+  width: 8px;
+  background: #eee;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d2d9e6;
+  border-radius: 5px;
+}
+
+/* ---- DASHBOARD ---- */
+/* Contenedor principal del dashboard con límite de ancho */
+.dashboard-wrapper {
+  max-width: 1320px;  /* Cambiar a 1140px si se quiere más compacto */
+  margin: 0 auto;
+  padding-bottom: 60px;
+}
+
+/* Tarjetas de KPI con sombra y bordes redondeados */
+.dash-kpi {
+  border-radius: 22px;
+  box-shadow: 0 8px 28px 0 rgba(0,0,0,0.09);
+}
+
+/* Colores por tipo de KPI */
+.kpi-docentes {
+  background: #1565c0 !important;
+}
+.kpi-asistencias {
+  background: #2e7d32 !important;
+}
+.kpi-tardanzas {
+  background: #ffc107 !important;
+  color: #232323 !important;
+}
+.kpi-advertencias {
+  background: #ff5252 !important;
+}
+.kpi-inasistencias {
+  background: #c62828 !important;
+}
+
+/* Ajustes de dashboard en móviles */
+@media (max-width: 991px) {
+  .dashboard-wrapper {
+    max-width: 100%;
+    padding: 0 10px;
+  }
+}
+
+/* ---- HERO LANDING ---- */
+/* Sección principal de bienvenida con fondo en degradado */
+.hero-section {
+  background: linear-gradient(120deg, #e6f0ff 0%, #f7fbff 100%);
+  min-height: 92vh;
+}
+
+/* Texto con degradado para titulares */
+.text-gradient {
+  background: linear-gradient(90deg, #1565c0, #16a1ff, #1565c0 85%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Botón primario para la landing */
+.btn-landing {
+  background: linear-gradient(90deg,#1565c0 60%,#2196f3 100%);
+  color: #fff;
+  border-radius: 50px;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 2px 12px rgba(33,101,200,.08);
+  transition: transform .17s;
+}
+
+.btn-landing:hover {
+  background: #1352a0;
+  transform: translateY(-2px) scale(1.03);
+}
+
+/* Botón secundario en modo bordeado */
+.btn-landing-secondary {
+  background: #fff;
+  color: #1565c0;
+  border: 2px solid #1565c0;
+  border-radius: 50px;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(33,101,200,.07);
+  transition: background .18s, color .18s;
+}
+
+.btn-landing-secondary:hover {
+  background: #e3edf7;
+}
+
+/* Botón terciario con fondo neutro */
+.btn-landing-tertiary {
+  background: #f3f8ff;
+  color: #1565c0;
+  border-radius: 50px;
+  font-weight: 600;
+  border: 2px solid #e3edf7;
+  transition: background .17s, color .17s;
+}
+
+.btn-landing-tertiary:hover {
+  background: #d9eaff;
+  color: #0d407a;
+}
+
+/* ---- SCAN HERO BOX ---- */
+/* Caja blanca centrada con sombra para el escaneo */
+.scan-hero-box {
+  background: rgba(255,255,255,0.98);
+  border-radius: 2.2rem;
+  padding: 2.5rem 2rem 1.8rem 2rem;
+  min-width: 320px;
+  max-width: 380px;
+  box-shadow: 0 8px 38px 0 rgba(21,101,192,0.15), 0 2px 8px rgba(33,54,140,.09);
+  margin-top: 1.8rem;
+}
+
+/* Círculo animado con ícono de escaneo */
+.scan-circle {
+  background: linear-gradient(90deg,#e3f0fa 50%,#cbe2fa 100%);
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 16px #1565c025;
+  animation: scan-glow 2.7s infinite cubic-bezier(.42,.45,.56,.89);
+}
+
+/* Ícono del círculo */
+.scan-icon {
+  font-size: 2.7rem;
+  color: #2196f3;
+  filter: drop-shadow(0 2px 10px #87c6fd55);
+}
+
+/* Animación sutil para el círculo de escaneo */
+@keyframes scan-glow {
+  0%,100% { box-shadow: 0 2px 16px #1565c025; }
+  50% { box-shadow: 0 0 24px #2196f366; }
+}
+
+/* Botón debajo del círculo */
+.btn-scan {
+  background: linear-gradient(90deg,#2196f3 50%,#1565c0 100%);
+  color: #fff;
+  border-radius: 50px;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(33,101,200,.08);
+  border: none;
+  transition: background .18s, transform .16s;
+}
+
+.btn-scan:hover, .btn-scan:focus {
+  background: #1769b4;
+  transform: translateY(-1px) scale(1.03);
+}
+
+/* Input de escaneo con ícono a la izquierda */
+.scan-input-prepend {
+  background: #fff !important;
+  color: #2196f3;
+  border-right: none;
+  font-size: 1.1em;
+}
+
+.scan-input {
+  background: #f8fcff !important;
+  border-left: none !important;
+  font-size: 1.09rem;
+  border: none;
+  box-shadow: none;
+  transition: box-shadow .17s;
+}
+
+.scan-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #2196f366;
+}
+
+/* Imagen SVG decorativa de fondo en el hero */
+.scan-bg-svg {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 260px;
+  max-width: 35vw;
+  min-width: 160px;
+  opacity: .23;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Responsive para secciones de escaneo */
+@media (max-width: 991px) {
+  .scan-hero-box {
+    margin-top: 2.5rem;
+  }
+  .scan-bg-svg {
+    display: none !important;
+  }
+}
+@media (max-width: 767px) {
+  .scan-hero-box {
+    max-width: 95vw;
+    padding: 1.2rem .7rem;
+  }
+  .hero-section {
+    min-height: 75vh;
+  }
+}
+
+/* ---- DOCENTES ---- */
+/* Avatar circular con iniciales para docentes */
+.docente-avatar {
+  background: linear-gradient(135deg,#1565c0 65%, #42a5f5 100%);
+  color: #fff;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  font-size: 2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid #fff;
+  box-shadow: 0 2px 14px #1565c045;
+  margin-bottom: 0.4rem;
+}
+
+/* Tarjeta de docente con animación al pasar el cursor */
+.docente-card-item {
+  transition: box-shadow .19s, transform .18s;
+  padding-top: 40px !important;
+}
+
+.docente-card-item:hover {
+  box-shadow: 0 6px 30px 0 #1565c022;
+  transform: translateY(-2px) scale(1.025);
+}
+
+/* Ajuste en móviles para tarjetas y avatares */
+@media (max-width: 768px) {
+  .docente-avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 1.4rem;
+  }
+  .docente-card-item {
+    padding-top: 28px !important;
+  }
+}
+
+/* Contenedor general de las alertas toast (notificaciones flotantes) */
+#flash-container {
+  position: fixed;
+  top: 30px;
+  right: 22px;
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: end;
+  pointer-events: none; /* para que no bloqueen clics detrás */
+}
+
+/* Caja individual de cada notificación */
+.flash-toast {
+  min-width: 290px;
+  max-width: 370px;
+  background: #fff;
+  color: #263145;
+  border-radius: 1rem;
+  box-shadow: 0 7px 24px rgba(36,56,120,0.14), 0 1.5px 7px rgba(38,38,38,0.06);
+  font-weight: 500;
+  font-size: 1.04em;
+  padding: 1.05em 1.3em 1.05em 1em;
+  margin-bottom: 2px;
+  border-left: 7px solid #b5b5b5;
+  display: flex;
+  align-items: center;
+  pointer-events: all;
+  transition: box-shadow 0.22s;
+  opacity: 0.98;
+}
+
+/* Ícono que acompaña al mensaje */
+.flash-toast .flash-icon {
+  font-size: 1.55em;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  min-width: 1.6em;
+  justify-content: center;
+}
+
+/* Texto del mensaje */
+.flash-toast .flash-text {
+  flex: 1 1 0;
+  word-break: break-word;
+}
+
+/* Botón de cerrar */
+.flash-toast .btn-close {
+  pointer-events: all;
+  margin-left: 8px;
+  filter: invert(1) grayscale(1) brightness(2);
+  opacity: 0.7;
+}
+.flash-toast .btn-close:focus,
+.flash-toast .btn-close:hover {
+  opacity: 1;
+}
+
+/* Colores según el tipo de alerta */
+.flash-success {
+  border-left-color: #22b573;
+  background: #e9fff5;
+  color: #176343;
+}
+.flash-info {
+  border-left-color: #2d9cdb;
+  background: #e7f5ff;
+  color: #186798;
+}
+.flash-warning {
+  border-left-color: #f7b924;
+  background: #fff9e6;
+  color: #886500;
+}
+.flash-danger,
+.flash-error {
+  border-left-color: #e54343;
+  background: #fff0f0;
+  color: #932323;
+}
+
+/* Animación opcional al mostrar*/
+@keyframes fadeInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(60px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate__fadeInRight {
+  animation: fadeInRight 0.7s;
+}
